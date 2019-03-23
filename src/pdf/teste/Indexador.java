@@ -21,7 +21,7 @@ import org.apache.lucene.util.Version;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.PDFTextStripperByArea;
-import org.apache.tika.Tika;
+//import org.apache.tika.Tika;
 
 public class Indexador {
   private static Logger logger = Logger.getLogger(Indexador.class);
@@ -34,7 +34,7 @@ public class Indexador {
   //{3}
   private IndexWriter writer;
   //{4}
-  private Tika tika;
+  //private Tika tika;
 
   public static void main(String[] args) {
     Indexador indexador = new Indexador();
@@ -116,26 +116,24 @@ public void indexaArquivosDoDiretorio(File raiz) {
 				PDFTextStripper Tstripper = new PDFTextStripper();
 				String str = Tstripper.getText(document);
 				
+				//Faz a varredura linha a linha do texto extraído 
 				Scanner scn = null;					
 				scn = new Scanner(str);
 				List<String> line = new ArrayList<String>();
-				
-				while (scn.hasNextLine()) 
-				{	
-					
-					line.add(scn.nextLine().trim());
-					//System.out.println("\n"+line);
-					
+				while (scn.hasNextLine()){
+					String analisar = scn.nextLine().trim();
+					if(analisar.length()>0) {
+						line.add(analisar);
+					}
 				}
-				String nomeComercial = line.get(0);
-				String fabricante = line.get(1);
 				
-				System.out.println(nomeComercial);
-				System.out.println(fabricante);
+				String nomeComercial = line.get(0);
+				String principioAtivo = line.get(1);
+				String fabricante = line.get(2);
 				
 				System.out.println(line);
 				
-				indexaArquivo(arquivo, str, nomeComercial, fabricante);
+				indexaArquivo(arquivo, str, nomeComercial, principioAtivo, fabricante);
 			}
 			document.close();
 		}
@@ -151,7 +149,7 @@ public void indexaArquivosDoDiretorio(File raiz) {
     }
   }
 
-  private void indexaArquivo(File arquivo, String textoExtraido, String nomeComercial, String fabricante) {
+  private void indexaArquivo(File arquivo, String textoExtraido, String nomeComercial, String principioAtivo,String fabricante) {
     SimpleDateFormat formatador = new SimpleDateFormat("yyyyMMdd");
     String ultimaModificacao = formatador.format(arquivo.lastModified());
     //{10}
@@ -161,6 +159,8 @@ public void indexaArquivosDoDiretorio(File raiz) {
     documento.add(new Field("Caminho", arquivo.getAbsolutePath(),
         Field.Store.YES, Field.Index.NOT_ANALYZED));
     documento.add(new Field("NomeComercial", nomeComercial, Field.Store.YES,
+            Field.Index.ANALYZED));
+    documento.add(new Field("PrincipioAtivo", principioAtivo, Field.Store.YES,
             Field.Index.ANALYZED));
     documento.add(new Field("Fabricante", fabricante, Field.Store.YES,
             Field.Index.ANALYZED));

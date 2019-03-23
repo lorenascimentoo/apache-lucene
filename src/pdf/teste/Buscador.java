@@ -43,6 +43,7 @@ public class Buscador {
         logger.info("Caminho: " + documento.get("Caminho"));
         logger.info("Última modificação: " + documento.get("UltimaModificacao"));
         logger.info("Nome Comercial: " + documento.get("NomeComercial"));
+        logger.info("Principio Ativo: " + documento.get("PrincipioAtivo"));
         logger.info("Fabricante: " + documento.get("Fabricante"));
         logger.info("Score:" + sd.score);
         logger.info("--------");
