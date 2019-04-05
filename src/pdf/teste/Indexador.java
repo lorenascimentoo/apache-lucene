@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -18,10 +15,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.Version;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.pdfbox.text.PDFTextStripperByArea;
-//import org.apache.tika.Tika;
+
 
 public class Indexador {
   private static Logger logger = Logger.getLogger(Indexador.class);
@@ -107,37 +101,18 @@ public void indexaArquivosDoDiretorio(File raiz) {
 
         try
 		{
-			PDDocument document = PDDocument.load(arquivo);// here file1.pdf is the name of pdf file which we want to read....
-			document.getClass();
-			if (!document.isEncrypted())
-			{
-				PDFTextStripperByArea stripper = new PDFTextStripperByArea();
-				stripper.setSortByPosition(true);
-				PDFTextStripper Tstripper = new PDFTextStripper();
-				String str = Tstripper.getText(document);
-				
-				//Faz a varredura linha a linha do texto extraído 
-				Scanner scn = null;					
-				scn = new Scanner(str);
-				List<String> line = new ArrayList<String>();
-				while (scn.hasNextLine()){
-					String analisar = scn.nextLine().trim();
-					if(analisar.length()>0) {
-						line.add(analisar);
-					}
-				}
-				
-				String nomeComercial = line.get(0);
-				String principioAtivo = line.get(1);
-				String fabricante = line.get(2);
-				
-				System.out.println(line);
-				
-				indexaArquivo(arquivo, str, nomeComercial, principioAtivo, fabricante);
-			}
-			document.close();
-		}
-		catch (Exception e) 
+        	ExtrairPDF pdf = new ExtrairPDF(arquivo);
+        	String nomeComercial = pdf.getNomeComercial();
+			String principioAtivo = pdf.getPrincipioAtivo();
+			String fabricante = pdf.getFabricante();
+			String indicacoes = pdf.getIndicacoes();
+			String contraIndicacoes = pdf.getContraIndicacoes();
+			String reacoesAdversas = pdf.getReacoesAdversas();
+			String textoExtraido = pdf.getTextoExtraido();
+			
+			indexaArquivo(arquivo, textoExtraido, nomeComercial, principioAtivo, fabricante, indicacoes, contraIndicacoes, reacoesAdversas);
+			
+		}catch (Exception e) 
 		{
 			e.printStackTrace();
 		}
@@ -149,7 +124,7 @@ public void indexaArquivosDoDiretorio(File raiz) {
     }
   }
 
-  private void indexaArquivo(File arquivo, String textoExtraido, String nomeComercial, String principioAtivo,String fabricante) {
+  private void indexaArquivo(File arquivo, String textoExtraido, String nomeComercial, String principioAtivo,String fabricante, String indicacoes, String contraIndicacoes, String reacoesAdversas) {
     SimpleDateFormat formatador = new SimpleDateFormat("yyyyMMdd");
     String ultimaModificacao = formatador.format(arquivo.lastModified());
     //{10}
@@ -163,6 +138,12 @@ public void indexaArquivosDoDiretorio(File raiz) {
     documento.add(new Field("PrincipioAtivo", principioAtivo, Field.Store.YES,
             Field.Index.ANALYZED));
     documento.add(new Field("Fabricante", fabricante, Field.Store.YES,
+            Field.Index.ANALYZED));
+    documento.add(new Field("", indicacoes, Field.Store.YES,
+            Field.Index.ANALYZED));
+    documento.add(new Field("", contraIndicacoes, Field.Store.YES,
+            Field.Index.ANALYZED));
+    documento.add(new Field("", reacoesAdversas, Field.Store.YES,
             Field.Index.ANALYZED));
     documento.add(new Field("Texto", textoExtraido, Field.Store.YES,
         Field.Index.ANALYZED));
