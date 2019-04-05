@@ -41,29 +41,34 @@ public class ExtrairPDF {
 				List<String> texto = getIndicacoes(pdfFileInText);
 				this.indicacoes = texto.get(0);
 				this.contraIndicacoes = texto.get(1);
-				
 				this.reacoesAdversas = texto.get(2);
 				
 				System.out.println("NOME COMERCIAL: " +nomeComercial);
 				System.out.println("PRINCIPIO ATIVO: " +principioAtivo);
 				System.out.println("FABRICANTE: " +fabricante);
-				System.out.println("INDICAÇÕES: "+indicacoes);
-				System.out.println("CONTRAINDICAÇÕES: " +contraIndicacoes);
-				System.out.println("REAÇÕES ADVERSAS: "+reacoesAdversas);
+				System.out.println(""+indicacoes);
+				System.out.println("" +contraIndicacoes);
+				System.out.println(""+reacoesAdversas);
+				System.out.println("-------------------------------------");
 				
 			}
 		}
 	}
 	
 	public static List<String> getBulasInfo(String pdfFileInText){
-		//Faz a varredura linha a linha do texto extraído 
+		//Faz a varredura linha a linha do texto extraído
+		String fabricante=null;
 		Scanner scn = null;					
 		scn = new Scanner(pdfFileInText);
 		List<String> line = new ArrayList<String>();
 			while (scn.hasNextLine()){
 				String analisar = scn.nextLine().trim();
 				if(analisar.length()>0 ) {
-					line.add(analisar);
+					if (analisar.contains("Ltda") || analisar.contains("LTDA")) {
+						fabricante = analisar;
+					} else {
+						line.add(analisar);
+					}					
 				}
 			}
 		
@@ -71,16 +76,16 @@ public class ExtrairPDF {
 		List<String> dados = new ArrayList<>();
 		dados.add(line.get(0));
 		dados.add(line.get(1));
-		dados.add(line.get(2));
+		dados.add(fabricante);
 		
 		scn.close();
 		return dados;	
 	}
 	
-	public static List<String> getIndicacoes(String pdfFileInText) {
+public static List<String> getIndicacoes(String pdfFileInText) {
 		
 		String p = pdfFileInText.replaceAll("\r\n", "");
-		p = p.replaceAll("  ", "\n").replaceAll("", "");
+		p = p.replaceAll("  ", "\n").replace("?", ":");
 		//Leitura linha a linha que gera o arquivo sem os espaços em branco
 		Scanner scn = null;					
 		scn = new Scanner(p);
@@ -98,23 +103,53 @@ public class ExtrairPDF {
 		scn.close();
 		
 		List<String> inf = new ArrayList<String>();
-		
+		List<String> indicacao = new ArrayList<String>();
+		List<String> contraIndicacao = new ArrayList<String>();
+		List<String> reacaoAdversa = new ArrayList<String>();
 		for(int i=0;i<textoExtraido.size();i++) {
 			String line = textoExtraido.get(i);
-			int aux = i+1;
 			if(line.contains("PARA")) {
-				inf.add(textoExtraido.get(aux));
-			} else if(line.contains("QUANDO")){
-				inf.add(textoExtraido.get(aux));
+				int j = i;
+				while(!textoExtraido.get(j).contains("NÃO")) {
+					indicacao.add(textoExtraido.get(j));
+					j++;
+				}
+			} else if(line.contains("NÃO")){
+				int j = i;
+				while(!textoExtraido.get(j).contains("SABER")) {
+					contraIndicacao.add(textoExtraido.get(j));
+					j++;
+					}
+				
 			}else if(line.contains("MALES")){
-				inf.add(2, textoExtraido.get(aux));
+				int j = i;
+				while(!textoExtraido.get(j).contains("QUANTIDADE")) {
+					reacaoAdversa.add(textoExtraido.get(j));
+					j++;
+					}
 			}
+
 		}
-	
+		
+		String dadoInd = getString(indicacao); 
+		String dadoContraInd = getString(contraIndicacao);
+		String dadoReacAdv = getString(reacaoAdversa);
+		
+		
+		inf.add(dadoInd);
+		inf.add(dadoContraInd);
+		inf.add(dadoReacAdv);
+		
 		
 		return inf;
 	}
-
+	
+	public static String getString(List<String> lista) {
+		String dado = lista.toString();
+		dado = dado.replaceAll("\\d.", "");
+		return dado;
+	}
+	
 	public String getNomeComercial() {
 		return nomeComercial;
 	}
